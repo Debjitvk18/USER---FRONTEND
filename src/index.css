@@ -1,0 +1,226 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --bg: #f8fbff;
+  --nav: #ffffff;
+  --card: #ffffff;
+  --text: #202124;
+  --subtle: #3c4043;
+  --muted: #6b7280;
+  --line: #e6eaf0;
+  --soft: #f1f5f9;
+  --blue: #1a73e8;
+  --blue-soft: #e8f0fe;
+  --shadow: 0 22px 55px rgba(60, 64, 67, 0.12);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111318;
+  --nav: #171a21;
+  --card: #1d2129;
+  --text: #f8fafc;
+  --subtle: #d6dce6;
+  --muted: #9aa4b2;
+  --line: #2d3440;
+  --soft: #252b35;
+  --blue: #8ab4f8;
+  --blue-soft: #1f355b;
+  --shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  font-family:
+    "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.google-mark {
+  display: grid;
+  grid-template-columns: repeat(2, 12px);
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 8px 22px rgba(60, 64, 67, 0.1);
+}
+
+.google-mark span {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.google-mark span:nth-child(1) {
+  background: #4285f4;
+}
+
+.google-mark span:nth-child(2) {
+  background: #db4437;
+}
+
+.google-mark span:nth-child(3) {
+  background: #f4b400;
+}
+
+.google-mark span:nth-child(4) {
+  background: #0f9d58;
+}
+
+.google-line {
+  width: min(260px, 100%);
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4285f4 0 25%, #db4437 25% 50%, #f4b400 50% 75%, #0f9d58 75%);
+}
+
+.icon-button {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--subtle);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.icon-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.primary-button,
+.secondary-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.primary-button {
+  border: 1px solid #1a73e8;
+  background: #1a73e8;
+  color: white;
+  box-shadow: 0 12px 24px rgba(26, 115, 232, 0.24);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(26, 115, 232, 0.3);
+}
+
+.secondary-button {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--subtle);
+}
+
+.secondary-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  background: var(--soft);
+}
+
+.feedback-card,
+.modal-panel,
+.empty-state {
+  border: 1px solid var(--line);
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.feedback-card {
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.modal-panel {
+  width: min(560px, 100%);
+  max-height: min(760px, 92vh);
+  overflow: auto;
+  border-radius: 24px;
+}
+
+.field-label {
+  display: grid;
+  gap: 8px;
+  color: var(--subtle);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input-control {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+  color: var(--text);
+  outline: none;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 500;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.input-control:focus {
+  border-color: var(--blue);
+  background: var(--card);
+  box-shadow: 0 0 0 4px var(--blue-soft);
+}
+
+.empty-state {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+  gap: 14px;
+  border-radius: 24px;
+  padding: 36px 20px;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .primary-button,
+  .secondary-button {
+    padding: 0 13px;
+  }
+
+  .feedback-card {
+    padding: 16px;
+  }
+}
