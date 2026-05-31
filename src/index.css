@@ -70,21 +70,10 @@ button:disabled {
   border-radius: 999px;
 }
 
-.google-mark span:nth-child(1) {
-  background: #4285f4;
-}
-
-.google-mark span:nth-child(2) {
-  background: #db4437;
-}
-
-.google-mark span:nth-child(3) {
-  background: #f4b400;
-}
-
-.google-mark span:nth-child(4) {
-  background: #0f9d58;
-}
+.google-mark span:nth-child(1) { background: #4285f4; }
+.google-mark span:nth-child(2) { background: #db4437; }
+.google-mark span:nth-child(3) { background: #f4b400; }
+.google-mark span:nth-child(4) { background: #0f9d58; }
 
 .google-line {
   width: min(260px, 100%);
@@ -102,10 +91,7 @@ button:disabled {
   border-radius: 999px;
   background: var(--card);
   color: var(--subtle);
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background 160ms ease;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
 .icon-button:hover {
@@ -125,10 +111,7 @@ button:disabled {
   padding: 0 18px;
   font-size: 14px;
   font-weight: 700;
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    background 160ms ease;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 .primary-button {
@@ -192,16 +175,35 @@ button:disabled {
   padding: 12px 14px;
   font-size: 15px;
   font-weight: 500;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    background 160ms ease;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 .input-control:focus {
   border-color: var(--blue);
   background: var(--card);
   box-shadow: 0 0 0 4px var(--blue-soft);
+}
+
+.file-control {
+  width: 100%;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+  color: var(--text);
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.file-control::file-selector-button {
+  margin-right: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--subtle);
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 700;
 }
 
 .empty-state {
@@ -214,7 +216,141 @@ button:disabled {
   text-align: center;
 }
 
+/* --- Navbar responsive labels --- */
+.nav-tickets-short { display: none; }
+
+/* --- Upload grid & cards --- */
+.uploads-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.upload-card {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.upload-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 28px 60px rgba(60, 64, 67, 0.18);
+}
+
+:root[data-theme="dark"] .upload-card:hover {
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.35);
+}
+
+.upload-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 12px;
+}
+
+.upload-badge {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.upload-card-files {
+  display: grid;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+
+.upload-file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+  text-decoration: none;
+  color: var(--subtle);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.upload-file-item:hover {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.upload-file-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.upload-file-pdf-thumb {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--blue-soft);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.upload-file-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+/* --- Mobile responsive --- */
 @media (max-width: 520px) {
+  .nav-shell {
+    flex-wrap: wrap;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .nav-brand {
+    width: 100%;
+  }
+
+  .nav-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-actions .icon-button {
+    width: 38px;
+    height: 38px;
+  }
+
+  .nav-actions .primary-button,
+  .nav-actions .secondary-button {
+    min-height: 38px;
+  }
+
+  .nav-tickets-button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-tickets-full {
+    display: none;
+  }
+
+  .nav-tickets-short {
+    display: inline;
+  }
+
   .primary-button,
   .secondary-button {
     padding: 0 13px;
@@ -222,5 +358,18 @@ button:disabled {
 
   .feedback-card {
     padding: 16px;
+  }
+
+  .uploads-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .upload-card-header {
+    padding: 14px 14px 10px;
+  }
+
+  .upload-card-files {
+    padding: 0 14px 14px;
   }
 }
