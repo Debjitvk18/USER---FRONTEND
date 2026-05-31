@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left.mjs";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right.mjs";
 import Heart from "lucide-react/dist/esm/icons/heart.mjs";
@@ -8,6 +8,7 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2.mjs";
 import MapPin from "lucide-react/dist/esm/icons/map-pin.mjs";
 import MessageSquarePlus from "lucide-react/dist/esm/icons/message-square-plus.mjs";
 import Moon from "lucide-react/dist/esm/icons/moon.mjs";
+import Search from "lucide-react/dist/esm/icons/search.mjs";
 import Send from "lucide-react/dist/esm/icons/send.mjs";
 import Star from "lucide-react/dist/esm/icons/star.mjs";
 import Sun from "lucide-react/dist/esm/icons/sun.mjs";
@@ -17,8 +18,8 @@ import ExternalLink from "lucide-react/dist/esm/icons/external-link.mjs";
 import Eye from "lucide-react/dist/esm/icons/eye.mjs";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const LIMIT = 10;
-const UPLOAD_LIMIT = 12;
+const LIMIT = 5;
+const UPLOAD_LIMIT = 5;
 
 const initialForm = { name: "", feedback: "", route: "", rating: 5, improvementArea: "" };
 const initialUploadForm = { passengerName: "", route: "", documents: [] };
@@ -33,15 +34,21 @@ function initialsFromName(name) {
   return name.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join("");
 }
 
-function formatDate(value) {
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
-}
-
 function formatBytes(bytes) {
   if (!bytes) return "0 KB";
   const units = ["B", "KB", "MB", "GB"];
   const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
   return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+/* Debounce hook */
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
 }
 
 function Stars({ value, interactive = false, onChange }) {
@@ -63,6 +70,27 @@ function Stars({ value, interactive = false, onChange }) {
   );
 }
 
+function SearchBar({ value, onChange, placeholder }) {
+  return (
+    <div className="search-bar-wrap">
+      <Search className="search-bar-icon h-4 w-4" />
+      <input
+        className="search-bar-input"
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-label={placeholder}
+      />
+      {value && (
+        <button type="button" className="search-bar-clear" onClick={() => onChange("")} aria-label="Clear search">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
 function FeedbackCard({ item, liked, onLike }) {
   return (
     <article className="feedback-card">
@@ -74,7 +102,6 @@ function FeedbackCard({ item, liked, onLike }) {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="truncate text-base font-semibold text-[var(--text)]">{item.name}</h2>
-              <p className="text-sm text-[var(--muted)]">{formatDate(item.createdAt)}</p>
             </div>
             <Stars value={item.rating} />
           </div>
@@ -208,7 +235,6 @@ function UploadCard({ upload }) {
         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: color }} aria-hidden="true">{initials}</div>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-bold text-[var(--text)]">{upload.passengerName}</h3>
-          <p className="text-xs text-[var(--muted)]">{formatDate(upload.createdAt)}</p>
         </div>
       </div>
       {upload.route ? (
@@ -245,6 +271,7 @@ function UploadCard({ upload }) {
   );
 }
 
+/* ── Ticket Feed Page ───────────────────────────────────────────── */
 function FilesFeedPage({ onBack }) {
   const [uploads, setUploads] = useState([]);
   const [page, setPage] = useState(1);
@@ -253,18 +280,31 @@ function FilesFeedPage({ onBack }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const searchQuery = useDebounce(searchInput, 400);
+
+  /* Reset page when search changes */
+  const prevQuery = useRef(searchQuery);
+  useEffect(() => {
+    if (prevQuery.current !== searchQuery) {
+      prevQuery.current = searchQuery;
+      setPage(1);
+    }
+  }, [searchQuery]);
 
   const loadUploads = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const response = await fetch(`${API_URL}/api/ticket-uploads?page=${page}&limit=${UPLOAD_LIMIT}`);
+      const params = new URLSearchParams({ page, limit: UPLOAD_LIMIT });
+      if (searchQuery.trim()) params.set("q", searchQuery.trim());
+      const response = await fetch(`${API_URL}/api/ticket-uploads?${params}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to load uploads");
       setUploads(data.items || []);
       setTotalPages(data.totalPages || 1);
       setTotal(data.total || 0);
     } catch (e) { setError(e.message); } finally { setLoading(false); }
-  }, [page]);
+  }, [page, searchQuery]);
 
   useEffect(() => { loadUploads(); }, [loadUploads]);
 
@@ -278,13 +318,22 @@ function FilesFeedPage({ onBack }) {
             <ArrowLeft className="h-4 w-4" /><span>Back to Feedback</span>
           </button>
           <p className="text-sm font-semibold text-[var(--blue)]">{total} uploaded files</p>
-          <h2 className="mt-2 text-3xl font-bold text-[var(--text)] sm:text-4xl">Tickets & Payment History</h2>
+          <h2 className="mt-2 text-3xl font-bold text-[var(--text)] sm:text-4xl">Tickets &amp; Payment History</h2>
         </div>
         <button type="button" className="primary-button" onClick={() => setUploadModalOpen(true)}>
           <FileUp className="h-4 w-4" /><span>Upload your files</span>
         </button>
       </div>
       <div className="google-line mb-6" aria-hidden="true" />
+
+      {/* Search bar */}
+      <div className="mb-6">
+        <SearchBar
+          value={searchInput}
+          onChange={setSearchInput}
+          placeholder="Search by name or route…"
+        />
+      </div>
 
       {error ? <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
 
@@ -299,20 +348,37 @@ function FilesFeedPage({ onBack }) {
       ) : (
         <div className="empty-state">
           <FileUp className="h-10 w-10 text-[var(--blue)]" />
-          <h2 className="text-xl font-bold">No files uploaded yet</h2>
-          <p className="text-sm text-[var(--muted)]">Be the first to upload your tickets and payment screenshots.</p>
-          <button type="button" className="primary-button" onClick={() => setUploadModalOpen(true)}>
-            <FileUp className="h-4 w-4" /><span>Upload your files</span>
-          </button>
+          <h2 className="text-xl font-bold">{searchInput ? "No results found" : "No files uploaded yet"}</h2>
+          <p className="text-sm text-[var(--muted)]">
+            {searchInput ? "Try a different search term." : "Be the first to upload your tickets and payment screenshots."}
+          </p>
+          {!searchInput && (
+            <button type="button" className="primary-button" onClick={() => setUploadModalOpen(true)}>
+              <FileUp className="h-4 w-4" /><span>Upload your files</span>
+            </button>
+          )}
         </div>
       )}
 
-      {!loading && uploads.length > 0 && (
-        <div className="mt-6 flex items-center justify-between gap-3">
+      {!loading && totalPages > 1 && (
+        <div className="pagination-bar mt-8">
           <button type="button" className="secondary-button" onClick={() => setPage((c) => Math.max(c - 1, 1))} disabled={page === 1}>
             <ChevronLeft className="h-4 w-4" /><span>Previous</span>
           </button>
-          <p className="text-sm font-semibold text-[var(--subtle)]">Page {page} of {totalPages}</p>
+          <div className="pagination-pages">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={`pagination-page-btn ${p === page ? "active" : ""}`}
+                onClick={() => setPage(p)}
+                aria-label={`Page ${p}`}
+                aria-current={p === page ? "page" : undefined}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
           <button type="button" className="secondary-button" onClick={() => setPage((c) => Math.min(c + 1, totalPages))} disabled={page === totalPages}>
             <span>Next</span><ChevronRight className="h-4 w-4" />
           </button>
@@ -324,6 +390,7 @@ function FilesFeedPage({ onBack }) {
   );
 }
 
+/* ── Main App ───────────────────────────────────────────────────── */
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
   const [currentView, setCurrentView] = useState("feedback");
@@ -337,20 +404,33 @@ export default function App() {
   const [likedIds, setLikedIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem("likedFeedbackIds") || "[]"); } catch { return []; }
   });
+  const [searchInput, setSearchInput] = useState("");
+  const searchQuery = useDebounce(searchInput, 400);
 
   const likedSet = useMemo(() => new Set(likedIds), [likedIds]);
 
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
 
+  /* Reset page on search change */
+  const prevQuery = useRef(searchQuery);
+  useEffect(() => {
+    if (prevQuery.current !== searchQuery) {
+      prevQuery.current = searchQuery;
+      setPage(1);
+    }
+  }, [searchQuery]);
+
   const loadFeedback = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const response = await fetch(`${API_URL}/api/feedback?page=${page}&limit=${LIMIT}`);
+      const params = new URLSearchParams({ page, limit: LIMIT });
+      if (searchQuery.trim()) params.set("q", searchQuery.trim());
+      const response = await fetch(`${API_URL}/api/feedback?${params}`);
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Unable to load feedback");
       setItems(data.items || []); setTotalPages(data.totalPages || 1); setTotal(data.total || 0);
     } catch (e) { setError(e.message); } finally { setLoading(false); }
-  }, [page]);
+  }, [page, searchQuery]);
 
   useEffect(() => { if (currentView === "feedback") loadFeedback(); }, [loadFeedback, currentView]);
 
@@ -367,6 +447,11 @@ export default function App() {
 
   function handleCreated() { setPage(1); loadFeedback(); }
 
+  /* Navigate to tickets — preserve feedback page/search state */
+  function goToTickets() { setCurrentView("files"); }
+  /* Navigate back to feedback — only update view, don't reset anything */
+  function goToFeedback() { setCurrentView("feedback"); }
+
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <nav className="sticky top-0 z-40 border-b border-[var(--line)] bg-[var(--nav)]/90 backdrop-blur-xl">
@@ -376,7 +461,11 @@ export default function App() {
             <h1 className="truncate text-base font-bold tracking-wide sm:text-lg">CUSTOMER FEEDBACK</h1>
           </div>
           <div className="nav-actions flex items-center gap-2">
-            <button type="button" className="secondary-button nav-tickets-button" onClick={() => setCurrentView(currentView === "feedback" ? "files" : "feedback")}>
+            <button
+              type="button"
+              className="secondary-button nav-tickets-button"
+              onClick={() => currentView === "feedback" ? goToTickets() : goToFeedback()}
+            >
               <Eye className="h-4 w-4" />
               <span className="nav-tickets-full">{currentView === "feedback" ? "See Tickets & Payment History" : "Back to Feedback"}</span>
               <span className="nav-tickets-short">{currentView === "feedback" ? "Tickets" : "Feedback"}</span>
@@ -394,7 +483,7 @@ export default function App() {
       </nav>
 
       {currentView === "files" ? (
-        <FilesFeedPage onBack={() => setCurrentView("feedback")} />
+        <FilesFeedPage onBack={goToFeedback} />
       ) : (
         <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-10">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -403,6 +492,15 @@ export default function App() {
               <h2 className="mt-2 text-3xl font-bold text-[var(--text)] sm:text-4xl">Feedback feed</h2>
             </div>
             <div className="google-line" aria-hidden="true" />
+          </div>
+
+          {/* Search bar */}
+          <div className="mb-6">
+            <SearchBar
+              value={searchInput}
+              onChange={setSearchInput}
+              placeholder="Search feedback, name or route…"
+            />
           </div>
 
           {error ? <p className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p> : null}
@@ -418,22 +516,38 @@ export default function App() {
           ) : (
             <div className="empty-state">
               <MessageSquarePlus className="h-10 w-10 text-[var(--blue)]" />
-              <h2 className="text-xl font-bold">No feedback yet</h2>
-              <button type="button" className="primary-button" onClick={() => setModalOpen(true)}>
-                <MessageSquarePlus className="h-4 w-4" /><span>Give feedback</span>
-              </button>
+              <h2 className="text-xl font-bold">{searchInput ? "No results found" : "No feedback yet"}</h2>
+              {searchInput
+                ? <p className="text-sm text-[var(--muted)]">Try a different search term.</p>
+                : <button type="button" className="primary-button" onClick={() => setModalOpen(true)}><MessageSquarePlus className="h-4 w-4" /><span>Give feedback</span></button>
+              }
             </div>
           )}
 
-          <div className="mt-6 flex items-center justify-between gap-3">
-            <button type="button" className="secondary-button" onClick={() => setPage((c) => Math.max(c - 1, 1))} disabled={page === 1 || loading}>
-              <ChevronLeft className="h-4 w-4" /><span>Previous</span>
-            </button>
-            <p className="text-sm font-semibold text-[var(--subtle)]">Page {page} of {totalPages}</p>
-            <button type="button" className="secondary-button" onClick={() => setPage((c) => Math.min(c + 1, totalPages))} disabled={page === totalPages || loading}>
-              <span>Next</span><ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          {totalPages > 1 && (
+            <div className="pagination-bar mt-8">
+              <button type="button" className="secondary-button" onClick={() => setPage((c) => Math.max(c - 1, 1))} disabled={page === 1 || loading}>
+                <ChevronLeft className="h-4 w-4" /><span>Previous</span>
+              </button>
+              <div className="pagination-pages">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`pagination-page-btn ${p === page ? "active" : ""}`}
+                    onClick={() => setPage(p)}
+                    aria-label={`Page ${p}`}
+                    aria-current={p === page ? "page" : undefined}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="secondary-button" onClick={() => setPage((c) => Math.min(c + 1, totalPages))} disabled={page === totalPages || loading}>
+                <span>Next</span><ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </section>
       )}
 

@@ -219,6 +219,107 @@ button:disabled {
 /* --- Navbar responsive labels --- */
 .nav-tickets-short { display: none; }
 
+/* --- Search bar --- */
+.search-bar-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 480px;
+}
+
+.search-bar-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.search-bar-input {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text);
+  outline: none;
+  padding: 10px 40px 10px 40px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.search-bar-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px var(--blue-soft);
+}
+
+.search-bar-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search-bar-clear {
+  position: absolute;
+  right: 12px;
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--soft);
+  color: var(--muted);
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.search-bar-clear:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+/* --- Pagination bar --- */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pagination-page-btn {
+  display: inline-grid;
+  min-width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--card);
+  color: var(--subtle);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 6px;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 120ms ease;
+}
+
+.pagination-page-btn:hover:not(.active) {
+  background: var(--soft);
+  transform: translateY(-1px);
+}
+
+.pagination-page-btn.active {
+  border-color: var(--blue);
+  background: var(--blue);
+  color: white;
+  box-shadow: 0 4px 14px rgba(26,115,232,0.30);
+}
+
+
 /* --- Upload grid & cards --- */
 .uploads-grid {
   display: grid;
